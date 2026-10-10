@@ -354,7 +354,7 @@ function Header() {
           <a
             href="/Shoaib-Ajmal-CV.pdf"
             download="Shoaib-Ajmal-CV.pdf"
-            className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#c5ff4a] px-5 py-3 text-sm font-semibold text-black transition hover:bg-white"
+            className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#c5ff4a] px-5 py-3 text-sm font-semibold !text-black transition hover:bg-white hover:!text-black"
           >
             Download CV <ArrowDown size={16} />
           </a>
