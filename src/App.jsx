@@ -315,12 +315,13 @@ function Header() {
           ))}
         </div>
 
-        <Link
-          to="/contact"
+        <a
+          href="/Shoaib-Ajmal-CV.pdf"
+          download="Shoaib-Ajmal-CV.pdf"
           className="hidden items-center gap-2 rounded-full bg-[#c5ff4a] px-5 py-3 text-sm font-semibold !text-black transition hover:bg-white hover:!text-black sm:inline-flex"
         >
-          Let's talk <ArrowUpRight size={16} />
-        </Link>
+          Download CV <ArrowDown size={16} />
+        </a>
 
         <button
           type="button"
@@ -350,12 +351,13 @@ function Header() {
               {item.label}
             </NavLink>
           ))}
-          <Link
-            to="/contact"
-            className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#c5ff4a] px-5 py-3 text-sm font-semibold text-black"
+          <a
+            href="/Shoaib-Ajmal-CV.pdf"
+            download="Shoaib-Ajmal-CV.pdf"
+            className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#c5ff4a] px-5 py-3 text-sm font-semibold text-black transition hover:bg-white"
           >
-            Let's talk <ArrowUpRight size={16} />
-          </Link>
+            Download CV <ArrowDown size={16} />
+          </a>
         </div>
       )}
     </header>
