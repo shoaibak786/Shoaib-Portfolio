@@ -352,7 +352,7 @@ function Header() {
           ))}
           <Link
             to="/contact"
-            className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#c5ff4a] px-5 py-3 text-sm font-semibold !stext-black hover:bg-white hover:!text-black "
+            className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#c5ff4a] px-5 py-3 text-sm font-semibold !text-black hover:bg-white hover:!text-black "
           >
             Let's talk <ArrowUpRight size={16} />
           </Link>
