@@ -127,8 +127,8 @@ const projects = [
     accent: "#c5ff4a",
     headline: ["Modern", "modest", "fashion."],
     icon: ShoppingBag,
-    link: "",
-    label: "In development",
+    link: "https://mashfaa-site.vercel.app/",
+    label: "Visit Website ",
   },
   {
     number: "02",
