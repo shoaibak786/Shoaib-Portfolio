@@ -1,5 +1,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { CustomCursor, SmoothScroll, RevealText, Spotlight, Tilt } from "./components/Effects";
 import {
   BrowserRouter,
   Routes,
@@ -35,7 +36,7 @@ import {
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Preloader from "./components/Preloader";
-
+import HeroNetwork from "./components/HeroNetwork";
 gsap.registerPlugin(ScrollTrigger);
 
 const PROFILE = {
@@ -643,12 +644,298 @@ function SkillCard({ skill }) {
   );
 }
 
+/* ------------------------------------------------------------------
+   Replace your CURRENT HomePage block in App.jsx with this whole file
+   (from "const TYPED" to the end of HomePage).
+   Needs in App.jsx imports:
+     import HeroNetwork from "./components/HeroNetwork";
+     import { CustomCursor, SmoothScroll, RevealText, Spotlight, Tilt } from "./components/Effects";
+   Do NOT keep any other "function Spotlight" in App.jsx.
+------------------------------------------------------------------- */
+
+const TYPED = [
+  "responsive websites.",
+  "online stores.",
+  "React interfaces.",
+  "WordPress sites.",
+  "Shopify experiences.",
+];
+
+const STATS = [
+  { value: projects.length, suffix: "", label: "Projects built" },
+  { value: technologies.length, suffix: "+", label: "Technologies used" },
+  { value: 3, suffix: "", label: "E-commerce platforms" },
+  { value: 1, suffix: "+", label: "Year teaching WordPress" },
+];
+
+const STEPS = [
+  { number: "01", title: "Understand", text: "I start with your goals, your audience and what the website needs to achieve." },
+  { number: "02", title: "Design", text: "Clean layouts and a visual direction that fits your brand." },
+  { number: "03", title: "Build", text: "Responsive, fast pages built with React, WordPress or Shopify." },
+  { number: "04", title: "Launch", text: "Testing across devices, then a smooth launch and handover." },
+];
+
+const VALUES = [
+  ["Responsive by default", "Every layout is built to feel right on phone, tablet and desktop."],
+  ["User-focused", "Clear structure and simple interactions that help visitors act."],
+  ["Always learning", "Growing in React, Python, databases and AI-powered apps."],
+];
+
+/* ---------- Typing effect ---------- */
+function Typewriter({ words, speed = 70, deleteSpeed = 36, pause = 1700 }) {
+  const reduce =
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const [text, setText] = useState("");
+  const [wordIndex, setWordIndex] = useState(0);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    if (reduce) return undefined;
+    const word = words[wordIndex];
+    let delay = deleting ? deleteSpeed : speed;
+    if (!deleting && text === word) delay = pause;
+    if (deleting && text === "") delay = 350;
+
+    const id = setTimeout(() => {
+      if (!deleting && text === word) {
+        setDeleting(true);
+      } else if (deleting && text === "") {
+        setDeleting(false);
+        setWordIndex((i) => (i + 1) % words.length);
+      } else {
+        setText(deleting ? word.slice(0, text.length - 1) : word.slice(0, text.length + 1));
+      }
+    }, delay);
+
+    return () => clearTimeout(id);
+  }, [text, deleting, wordIndex, words, speed, deleteSpeed, pause, reduce]);
+
+  return (
+    <span className="text-[#c5ff4a]">
+      {reduce ? words[0] : text}
+      {!reduce && (
+        <span className="ml-1 inline-block h-[1em] w-[2px] translate-y-[0.15em] animate-pulse bg-[#c5ff4a]" />
+      )}
+    </span>
+  );
+}
+
+/* ---------- Buttons that gently follow the cursor ---------- */
+function Magnetic({ children, strength = 0.28 }) {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || window.matchMedia("(pointer: coarse)").matches) return undefined;
+
+    const move = (e) => {
+      const r = el.getBoundingClientRect();
+      gsap.to(el, {
+        x: (e.clientX - (r.left + r.width / 2)) * strength,
+        y: (e.clientY - (r.top + r.height / 2)) * strength,
+        duration: 0.35,
+        ease: "power3.out",
+      });
+    };
+    const leave = () => gsap.to(el, { x: 0, y: 0, duration: 0.7, ease: "elastic.out(1, 0.4)" });
+
+    el.addEventListener("mousemove", move);
+    el.addEventListener("mouseleave", leave);
+    return () => {
+      el.removeEventListener("mousemove", move);
+      el.removeEventListener("mouseleave", leave);
+      gsap.killTweensOf(el);
+    };
+  }, [strength]);
+
+  return (
+    <div ref={ref} className="inline-block">
+      {children}
+    </div>
+  );
+}
+
+/* ---------- Thin lime scroll progress bar ---------- */
+function ScrollProgress() {
+  const barRef = useRef(null);
+
+  useEffect(() => {
+    const update = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      if (barRef.current) {
+        barRef.current.style.transform = `scaleX(${max > 0 ? window.scrollY / max : 0})`;
+      }
+    };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={barRef}
+      className="pointer-events-none fixed left-0 top-0 z-[1000] h-[2px] w-full origin-left bg-[#c5ff4a] shadow-[0_0_12px_#c5ff4a]"
+      style={{ transform: "scaleX(0)" }}
+    />
+  );
+}
+
+/* ---------- Giant outlined text that slides sideways as you scroll ---------- */
+function ScrollMarquee({ text }) {
+  const trackRef = useRef(null);
+
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return undefined;
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        el,
+        { xPercent: 8 },
+        {
+          xPercent: -38,
+          ease: "none",
+          scrollTrigger: {
+            trigger: el.parentElement,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: true,
+          },
+        }
+      );
+    }, el);
+
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <div className="overflow-hidden py-10 sm:py-14" aria-hidden="true">
+      <div
+        ref={trackRef}
+        className="display-font flex w-max items-center gap-10 whitespace-nowrap text-[18vw] font-semibold leading-none tracking-[-0.05em] md:text-[12vw]"
+      >
+        {[0, 1, 2].map((i) => (
+          <span key={i} className="flex items-center gap-10">
+            <span className="text-transparent [-webkit-text-stroke:1.5px_rgba(255,255,255,0.22)]">{text}</span>
+            <span className="text-[#c5ff4a]">✳</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Count-up numbers ---------- */
+function CountUp({ to, suffix = "" }) {
+  const ref = useRef(null);
+  const [value, setValue] = useState(0);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    let raf;
+    let started = false;
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting || started) return;
+        started = true;
+        const t0 = performance.now();
+        const tick = (now) => {
+          const p = Math.min(1, (now - t0) / 1400);
+          setValue(Math.round((1 - Math.pow(1 - p, 3)) * to));
+          if (p < 1) raf = requestAnimationFrame(tick);
+        };
+        raf = requestAnimationFrame(tick);
+      },
+      { threshold: 0.4 }
+    );
+    io.observe(el);
+
+    return () => {
+      io.disconnect();
+      cancelAnimationFrame(raf);
+    };
+  }, [to]);
+
+  return (
+    <span ref={ref}>
+      {value}
+      {suffix}
+    </span>
+  );
+}
+
+/* ---------- Copy email button ---------- */
+function CopyEmail() {
+  const [copied, setCopied] = useState(false);
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(PROFILE.email);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      window.location.href = `mailto:${PROFILE.email}`;
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={copy}
+      className="inline-flex items-center gap-2 rounded-full border border-white/15 px-5 py-4 text-sm font-medium text-white/80 transition hover:border-[#c5ff4a] hover:text-[#c5ff4a]"
+    >
+      {copied ? (
+        <>
+          <CheckCircle2 size={16} className="text-[#c5ff4a]" /> Email copied
+        </>
+      ) : (
+        <>
+          <Mail size={16} /> {PROFILE.email}
+        </>
+      )}
+    </button>
+  );
+}
+
+function MarqueeRow({ reverse = false, dim = false }) {
+  return (
+    <div
+      className="marquee-track flex min-w-max items-center gap-8 animate-[marquee_38s_linear_infinite]"
+      style={reverse ? { animationDirection: "reverse" } : undefined}
+    >
+      {[...technologies, ...technologies].map((technology, index) => (
+        <span
+          key={`${technology}-${index}`}
+          className={`flex items-center gap-8 whitespace-nowrap text-xs font-medium uppercase tracking-[0.18em] ${
+            dim ? "text-white/20" : "text-white/45"
+          }`}
+        >
+          {technology}
+          <span className="text-[#c5ff4a]">✳</span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function HomePage() {
   return (
     <>
+      <ScrollProgress />
+
+      {/* ============ HERO ============ */}
       <section className="relative mx-auto grid min-h-[calc(100vh-85px)] max-w-[1376px] items-center gap-12 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-[1.15fr_0.85fr] lg:gap-14 lg:px-12 lg:py-24">
+        <HeroNetwork />
+
         <div className="relative z-10">
-          <div className="hero-intro mb-7 inline-flex max-w-full items-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-4 py-2 text-[10px] text-white/65 sm:text-xs">
+          <div className="hero-intro mb-7 inline-flex max-w-full items-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-4 py-2 text-[10px] text-white/65 backdrop-blur sm:text-xs">
             <span className="relative flex h-2 w-2 shrink-0">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#c5ff4a] opacity-50" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-[#c5ff4a]" />
@@ -663,33 +950,38 @@ function HomePage() {
           <h1 className="hero-intro display-font text-6xl font-semibold leading-[0.98] tracking-[-0.065em] sm:text-7xl md:text-8xl xl:text-[108px]">
             Web
             <br />
-            <span className="text-[#c5ff4a]">Developer</span>
+            <span className="bg-gradient-to-r from-[#c5ff4a] to-[#eaffb0] bg-clip-text text-transparent">
+              Developer
+            </span>
             <span className="text-white">.</span>
           </h1>
 
-          <h2 className="hero-intro mt-6 text-base font-medium tracking-tight text-white/70 sm:text-xl">
-            Frontend · Backend · WordPress · Shopify
+          <h2 className="hero-intro mt-6 min-h-[2rem] text-lg font-medium tracking-tight text-white/70 sm:text-2xl">
+            I build <Typewriter words={TYPED} />
           </h2>
 
           <p className="hero-intro mt-5 max-w-xl text-sm leading-7 text-white/50 sm:text-base sm:leading-8">
-            I build responsive websites, e-commerce stores and engaging
-            digital experiences using modern web technologies. I also explore
-            backend development, databases and creative design.
+            Frontend, WordPress, Shopify and backend basics: I turn ideas into
+            fast, responsive websites and e-commerce experiences people enjoy using.
           </p>
 
           <div className="hero-intro mt-8 flex flex-wrap gap-3">
-            <Link
-              to="/projects"
-              className="inline-flex items-center gap-3 rounded-full bg-[#c5ff4a] px-5 py-4 text-sm font-semibold !text-black transition hover:bg-white hover:!text-black sm:px-6"
-            >
-              Explore my work <ArrowRight size={17} />
-            </Link>
-            <Link
-              to="/contact"
-              className="inline-flex items-center gap-3 rounded-full border border-white/15 px-5 py-4 text-sm font-medium text-white transition hover:border-[#c5ff4a] hover:text-[#c5ff4a] sm:px-6"
-            >
-              Get in touch <ArrowUpRight size={17} />
-            </Link>
+            <Magnetic>
+              <Link
+                to="/projects"
+                className="inline-flex items-center gap-3 rounded-full bg-[#c5ff4a] px-5 py-4 text-sm font-semibold !text-black shadow-[0_0_40px_rgba(197,255,74,0.25)] transition hover:bg-white hover:!text-black sm:px-6"
+              >
+                Explore my work <ArrowRight size={17} />
+              </Link>
+            </Magnetic>
+            <Magnetic>
+              <Link
+                to="/contact"
+                className="inline-flex items-center gap-3 rounded-full border border-white/15 px-5 py-4 text-sm font-medium text-white transition hover:border-[#c5ff4a] hover:text-[#c5ff4a] sm:px-6"
+              >
+                Get in touch <ArrowUpRight size={17} />
+              </Link>
+            </Magnetic>
           </div>
 
           <div className="hero-intro mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 text-xs text-white/40">
@@ -719,22 +1011,24 @@ function HomePage() {
             <Sparkles size={27} strokeWidth={1.2} />
           </div>
 
-          <div className="portrait-frame relative z-10 aspect-square w-[68%] overflow-hidden rounded-full border border-[#c5ff4a]/40 bg-[#111] shadow-[0_0_80px_rgba(197,255,74,0.12)]">
-            <img
-              src="/images/profile.png"
-              alt="Shoaib Ajmal — Web Developer"
-              className="h-full w-full rounded-full object-cover object-center transition-transform duration-700 hover:scale-110"
-            />
-            <div className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-t from-black/55 via-transparent to-black/10" />
-            <div className="absolute bottom-[13%] left-0 right-0 text-center">
-              <p className="text-[9px] uppercase tracking-[0.25em] text-[#c5ff4a] sm:text-[10px]">
-                Creative Developer
-              </p>
-              <p className="mt-1 text-base font-semibold tracking-tight text-white sm:text-xl">
-                Shoaib Ajmal<span className="text-[#c5ff4a]">.</span>
-              </p>
+          <Tilt max={12} className="relative z-10 aspect-square w-[68%] rounded-full">
+            <div className="portrait-frame relative aspect-square w-full overflow-hidden rounded-full border border-[#c5ff4a]/40 bg-[#111] shadow-[0_0_80px_rgba(197,255,74,0.12)]">
+              <img
+                src="/images/profile.png"
+                alt="Shoaib Ajmal — Web Developer"
+                className="h-full w-full rounded-full object-cover object-center transition-transform duration-700 hover:scale-110"
+              />
+              <div className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-t from-black/55 via-transparent to-black/10" />
+              <div className="absolute bottom-[13%] left-0 right-0 text-center">
+                <p className="text-[9px] uppercase tracking-[0.25em] text-[#c5ff4a] sm:text-[10px]">
+                  Creative Developer
+                </p>
+                <p className="mt-1 text-base font-semibold tracking-tight text-white sm:text-xl">
+                  Shoaib Ajmal<span className="text-[#c5ff4a]">.</span>
+                </p>
+              </div>
             </div>
-          </div>
+          </Tilt>
 
           <div className="floating-card absolute bottom-[9%] left-0 z-20 rounded-2xl border border-white/10 bg-[#111]/95 px-3 py-3 shadow-2xl backdrop-blur-xl sm:left-[-2%] sm:px-4">
             <div className="flex items-center gap-3">
@@ -751,9 +1045,7 @@ function HomePage() {
           <div className="floating-card absolute right-0 top-[36%] z-20 rounded-xl border border-white/10 bg-[#111]/95 px-3 py-3 shadow-xl backdrop-blur-xl sm:right-[-2%]">
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-[#c5ff4a] shadow-[0_0_12px_#c5ff4a]" />
-              <span className="text-[10px] font-medium text-white/80">
-                Open to opportunities
-              </span>
+              <span className="text-[10px] font-medium text-white/80">Open to opportunities</span>
             </div>
           </div>
         </div>
@@ -766,32 +1058,55 @@ function HomePage() {
         </a>
       </section>
 
+      {/* ============ TECH MARQUEE (two rows) ============ */}
       <section
         id="technology"
         aria-label="Technologies"
         className="marquee-wrap overflow-hidden border-y border-white/[0.08] bg-white/[0.02] py-5"
       >
-        <div className="marquee-track flex min-w-max animate-[marquee_32s_linear_infinite] items-center gap-8">
-          {[...technologies, ...technologies].map((technology, index) => (
-            <span
-              key={`${technology}-${index}`}
-              className="flex items-center gap-8 whitespace-nowrap text-xs font-medium uppercase tracking-[0.18em] text-white/40"
+        <div
+          className="space-y-4"
+          style={{
+            WebkitMaskImage: "linear-gradient(to right, transparent, #000 10%, #000 90%, transparent)",
+            maskImage: "linear-gradient(to right, transparent, #000 10%, #000 90%, transparent)",
+          }}
+        >
+          <MarqueeRow />
+          <MarqueeRow reverse dim />
+        </div>
+      </section>
+
+      {/* ============ STATS ============ */}
+      <section className="section-reveal mx-auto max-w-[1376px] px-5 pt-20 sm:px-8 lg:px-12">
+        <div className="grid grid-cols-2 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.02] lg:grid-cols-4">
+          {STATS.map((stat, i) => (
+            <div
+              key={stat.label}
+              className={`p-6 sm:p-9 ${i % 2 === 1 ? "border-l border-white/10" : ""} ${
+                i > 1 ? "border-t border-white/10 lg:border-t-0" : ""
+              } ${i > 0 ? "lg:border-l lg:border-white/10" : ""}`}
             >
-              {technology}
-              <span className="text-[#c5ff4a]">✳</span>
-            </span>
+              <p className="display-font text-5xl font-semibold tracking-[-0.05em] text-white sm:text-6xl">
+                <CountUp to={stat.value} suffix={stat.suffix} />
+              </p>
+              <p className="mt-3 text-xs uppercase tracking-[0.16em] text-white/40">{stat.label}</p>
+            </div>
           ))}
         </div>
       </section>
 
+      {/* ============ ABOUT ============ */}
       <section className="section-reveal mx-auto max-w-[1376px] px-5 py-24 sm:px-8 md:py-32 lg:px-12">
         <SectionLabel number="01">A little about me</SectionLabel>
         <div className="grid gap-10 lg:grid-cols-[1fr_0.8fr] lg:items-end">
-          <h2 className="display-font text-4xl font-medium leading-tight tracking-[-0.045em] sm:text-6xl">
+          <RevealText
+            as="h2"
+            className="display-font text-4xl font-medium leading-tight tracking-[-0.045em] sm:text-6xl"
+          >
             Turning ideas into
             <span className="text-[#c5ff4a]"> useful digital </span>
             experiences.
-          </h2>
+          </RevealText>
           <div>
             <p className="text-sm leading-7 text-white/50 sm:text-base sm:leading-8">
               I'm a Lahore-based web developer interested in building clean,
@@ -806,17 +1121,36 @@ function HomePage() {
             </Link>
           </div>
         </div>
+
+        <div className="mt-14 grid gap-4 md:grid-cols-3">
+          {VALUES.map(([title, text]) => (
+            <Spotlight
+              key={title}
+              className="group border border-white/10 bg-white/[0.02] p-6 transition-colors duration-300 hover:border-[#c5ff4a]/40 sm:p-7"
+            >
+              <span className="mb-5 block h-px w-10 bg-[#c5ff4a] transition-all duration-300 group-hover:w-16" />
+              <h3 className="text-lg font-semibold tracking-tight">{title}</h3>
+              <p className="mt-3 text-sm leading-6 text-white/45">{text}</p>
+            </Spotlight>
+          ))}
+        </div>
       </section>
 
+      <ScrollMarquee text="Design · Build · Deliver" />
+
+      {/* ============ EXPERTISE ============ */}
       <section className="section-reveal border-y border-white/[0.07] bg-[#0b0b0b] px-5 py-24 sm:px-8 md:py-28 lg:px-12">
         <div className="mx-auto max-w-7xl">
           <SectionLabel number="02">Expertise</SectionLabel>
           <div className="mb-10 flex flex-col justify-between gap-5 md:flex-row md:items-end">
-            <h2 className="display-font max-w-2xl text-4xl font-medium leading-tight tracking-[-0.045em] sm:text-5xl">
+            <RevealText
+              as="h2"
+              className="display-font max-w-2xl text-4xl font-medium leading-tight tracking-[-0.045em] sm:text-5xl"
+            >
               Skills built around
               <br />
               <span className="text-white/35">real-world solutions.</span>
-            </h2>
+            </RevealText>
             <Link
               to="/expertise"
               className="inline-flex items-center gap-2 text-sm text-[#c5ff4a] hover:text-white"
@@ -825,49 +1159,103 @@ function HomePage() {
             </Link>
           </div>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {skills.slice(0, 3).map((skill) => (
-              <SkillCard key={skill.number} skill={skill} />
+            {skills.map((skill) => (
+              <Spotlight key={skill.number}>
+                <SkillCard skill={skill} />
+              </Spotlight>
             ))}
           </div>
         </div>
       </section>
 
+      {/* ============ PROCESS ============ */}
       <section className="section-reveal mx-auto max-w-[1376px] px-5 py-24 sm:px-8 md:py-28 lg:px-12">
-        <SectionLabel number="03">Selected projects</SectionLabel>
-        <div className="mb-10 flex flex-col justify-between gap-5 md:flex-row md:items-end">
-          <h2 className="display-font text-4xl font-medium tracking-[-0.045em] sm:text-5xl">
-            Work & experiments<span className="text-[#c5ff4a]">.</span>
-          </h2>
-          <Link
-            to="/projects"
-            className="inline-flex items-center gap-2 text-sm text-[#c5ff4a] hover:text-white"
-          >
-            View all projects <ArrowRight size={16} />
-          </Link>
-        </div>
-        <div className="grid gap-5 md:grid-cols-2 md:grid-rows-2">
-          {projects.slice(0, 4).map((project) => (
-            <ProjectCard key={project.number} project={project} />
+        <SectionLabel number="03">How I work</SectionLabel>
+        <RevealText
+          as="h2"
+          className="display-font mb-12 max-w-2xl text-4xl font-medium leading-tight tracking-[-0.045em] sm:text-5xl"
+        >
+          A simple process,
+          <span className="text-white/35"> clear results.</span>
+        </RevealText>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {STEPS.map((step) => (
+            <Spotlight
+              key={step.number}
+              className="group overflow-hidden border border-white/10 bg-white/[0.02] p-6 transition-colors duration-300 hover:border-[#c5ff4a]/40 sm:p-7"
+            >
+              <span className="display-font text-6xl font-semibold tracking-[-0.06em] text-white/[0.07] transition-colors duration-300 group-hover:text-[#c5ff4a]/25">
+                {step.number}
+              </span>
+              <h3 className="mt-6 text-xl font-semibold tracking-tight">{step.title}</h3>
+              <p className="mt-3 text-sm leading-6 text-white/45">{step.text}</p>
+            </Spotlight>
           ))}
         </div>
       </section>
 
+      {/* ============ PROJECTS ============ */}
+      <section className="section-reveal mx-auto max-w-[1376px] px-5 pb-24 sm:px-8 md:pb-28 lg:px-12">
+        <SectionLabel number="04">Selected projects</SectionLabel>
+        <div className="mb-10 flex flex-col justify-between gap-5 md:flex-row md:items-end">
+          <RevealText
+            as="h2"
+            className="display-font text-4xl font-medium tracking-[-0.045em] sm:text-5xl"
+          >
+            Work & experiments<span className="text-[#c5ff4a]">.</span>
+          </RevealText>
+          <Link
+            to="/projects"
+            className="inline-flex items-center gap-2 text-sm text-[#c5ff4a] hover:text-white"
+          >
+            View all {projects.length} projects <ArrowRight size={16} />
+          </Link>
+        </div>
+        <div className="grid gap-5 md:grid-cols-2">
+          <Spotlight className="md:col-span-2">
+            <ProjectCard project={projects[0]} />
+          </Spotlight>
+          {projects.slice(1, 3).map((project) => (
+            <Spotlight key={project.number}>
+              <ProjectCard project={project} />
+            </Spotlight>
+          ))}
+        </div>
+      </section>
+
+      {/* ============ FINAL CTA ============ */}
       <section className="section-reveal px-5 pb-24 sm:px-8 lg:px-12">
-        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-7 rounded-3xl border border-[#c5ff4a]/20 bg-[#10130c] p-7 sm:p-12 md:flex-row md:items-center">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-[#c5ff4a]">
+        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-3xl border border-[#c5ff4a]/20 bg-[#10130c] p-7 sm:p-14">
+          <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[#c5ff4a]/[0.12] blur-[90px]" />
+          <div className="relative">
+            <p className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-[#c5ff4a]">
+              <span className="h-2 w-2 rounded-full bg-[#c5ff4a]" />
               Have a project in mind?
             </p>
-            <h2 className="display-font mt-4 max-w-2xl text-4xl font-medium tracking-tight sm:text-5xl">
-              Let's build something meaningful.
-            </h2>
+            <RevealText
+              as="h2"
+              className="display-font mt-5 max-w-3xl text-4xl font-medium leading-[1.05] tracking-[-0.045em] sm:text-6xl"
+            >
+              Let's build something
+              <span className="text-[#c5ff4a]"> meaningful</span>.
+            </RevealText>
+            <p className="mt-5 max-w-xl text-sm leading-7 text-white/50">
+              Tell me about your website, online store or idea. Email is the
+              easiest way to start.
+            </p>
+            <div className="mt-9 flex flex-wrap gap-3">
+              <Magnetic>
+                <Link
+                  to="/contact"
+                  className="inline-flex items-center gap-3 rounded-full bg-[#c5ff4a] px-6 py-4 text-sm font-semibold !text-black transition hover:bg-white hover:!text-black"
+                >
+                  Contact me <ArrowUpRight size={17} />
+                </Link>
+              </Magnetic>
+              <CopyEmail />
+            </div>
           </div>
-          <Link
-            to="/contact"
-            className="inline-flex w-fit shrink-0 items-center gap-3 rounded-full bg-[#c5ff4a] px-6 py-4 text-sm font-semibold !text-black transition hover:bg-white hover:!text-black"
-          >
-            Contact me <ArrowUpRight size={17} />
-          </Link>
         </div>
       </section>
     </>
@@ -1523,7 +1911,8 @@ export default function App() {
     <BrowserRouter>
       <PortfolioApp />
       <WhatsAppChat />
-
+      <SmoothScroll />
+      <CustomCursor />
     </BrowserRouter>
   );
 }
