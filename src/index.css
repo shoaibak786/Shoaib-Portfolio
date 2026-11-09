@@ -486,3 +486,169 @@ h3 {
 .preloader-bottom span:last-child {
   color: #c5ff4a;
 }
+
+
+/* Asli cursor sirf desktop (mouse wali devices) par chhupana */
+
+
+/* Lenis ke liye zaroori styles */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+
+/* ===== Premium additions ===== */
+
+.shine { position: relative; overflow: hidden; }
+.shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.55) 50%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 0.8s ease;
+  pointer-events: none;
+}
+.shine:hover::after { transform: translateX(120%); }
+
+.hairline {
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(197, 255, 74, 0.35), transparent);
+}
+
+@property --cta-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+.cta-border {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(#10130c, #10130c) padding-box,
+    conic-gradient(from var(--cta-angle), rgba(197, 255, 74, 0.05), rgba(197, 255, 74, 0.7), rgba(197, 255, 74, 0.05) 40%) border-box;
+  animation: cta-spin 8s linear infinite;
+}
+@keyframes cta-spin { to { --cta-angle: 360deg; } }
+
+.portrait-ring { animation: portrait-glow 5s ease-in-out infinite; }
+@keyframes portrait-glow {
+  0%, 100% { box-shadow: 0 0 60px rgba(197, 255, 74, 0.10); }
+  50% { box-shadow: 0 0 95px rgba(197, 255, 74, 0.22); }
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 60;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+
+
+
+/* Paste at the very end of src/index.css (after the earlier premium block) */
+
+/* 1. Page-wide soft glow that follows the mouse */
+.mouse-glow {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: radial-gradient(600px circle at var(--mx, 50%) var(--my, 30%), rgba(197, 255, 74, 0.07), transparent 60%);
+}
+@media (hover: none) { .mouse-glow { display: none; } }
+
+/* 2. Hero text fades and drifts up as you scroll (Chrome/Edge/Safari 26+; ignored elsewhere) */
+@supports (animation-timeline: scroll()) {
+  .hero-scroll-out {
+    animation: hero-out linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 70vh;
+  }
+  @keyframes hero-out {
+    to { opacity: 0.2; transform: translateY(-48px); }
+  }
+}
+
+/* 3. Cards: gradient border draws in on hover, plus a small lift */
+.glow-card {
+  position: relative;
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+.glow-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(197, 255, 74, 0.9), transparent 45%, rgba(197, 255, 74, 0.35));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+.glow-card:hover { transform: translateY(-4px); box-shadow: 0 28px 60px -30px rgba(197, 255, 74, 0.35); }
+.glow-card:hover::before { opacity: 1; }
+
+/* 4. Text links: underline draws in from the left */
+.link-underline {
+  background: linear-gradient(currentColor, currentColor) left bottom / 0 1px no-repeat;
+  padding-bottom: 2px;
+  transition: background-size 0.35s ease, color 0.2s ease;
+}
+.link-underline:hover { background-size: 100% 1px; }
+
+/* 5. Stats: soft tint and an accent line under the hovered cell */
+.stat-cell { position: relative; transition: background-color 0.3s ease; }
+.stat-cell::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(to right, transparent, #c5ff4a, transparent);
+  transform: scaleX(0);
+  transition: transform 0.45s ease;
+}
+.stat-cell:hover { background-color: rgba(197, 255, 74, 0.04); }
+.stat-cell:hover::after { transform: scaleX(1); }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-scroll-out { animation: none; }
+  .glow-card:hover { transform: none; }
+}
+
+
+.shimmer-words .reveal-word {
+  background-image: linear-gradient(90deg, #c5ff4a, #ffffff, #c5ff4a);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer-words-move 4s linear infinite;
+}
+@keyframes shimmer-words-move {
+  to { background-position: -200% 0; }
+}
